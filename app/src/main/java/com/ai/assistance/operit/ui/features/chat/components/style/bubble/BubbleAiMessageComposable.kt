@@ -167,6 +167,14 @@ fun BubbleAiMessageComposable(
     // 创建并保存StreamMarkdownRenderer的状态，使用message.timestamp作为key确保同一条消息共享状态
     val rendererState = remember(message.timestamp) { StreamMarkdownRendererState() }
 
+    val splitThinkingBlock =
+        remember(message.content, message.contentStream) {
+            if (message.contentStream == null) splitThinkingAndTools(message.content) else null
+        }
+    val bubbleBodyContent = splitThinkingBlock?.first ?: message.content
+    val externalBlockContent = splitThinkingBlock?.second ?: ""
+    val externalRendererState = remember(message.timestamp) { StreamMarkdownRendererState() }
+
     val xmlRenderer = remember(
         effectiveShowThinkingProcess,
         showStatusTags,
@@ -602,7 +610,7 @@ fun BubbleAiMessageComposable(
                                 // 对于已完成的静态消息，使用 content 参数的渲染器以支持Markdown
                                 // 共享相同的state，避免重新计算nodes等状态
                                 StreamMarkdownRenderer(
-                                    content = message.content,
+                                    content = bubbleBodyContent,
                                     textColor = textColor,
                                     backgroundColor = backgroundColor,
                                     onLinkClick = rememberedOnLinkClick,
@@ -673,6 +681,23 @@ fun BubbleAiMessageComposable(
                     }
                 }
             }
+            if (externalBlockContent.isNotBlank()) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(top = 2.dp)
+                ) {
+                    StreamMarkdownRenderer(
+                        content = externalBlockContent,
+                        textColor = textColor,
+                        backgroundColor = Color.Transparent,
+                        onLinkClick = rememberedOnLinkClick,
+                        xmlRenderer = xmlRenderer,
+                        nodeGrouper = nodeGrouper,
+                        enableDialogs = enableDialogs,
+                        modifier = Modifier.fillMaxWidth(),
+                        state = externalRendererState,
+                    )
+                }
+            }
         }
         }
     }
@@ -689,4 +714,28 @@ fun BubbleAiMessageComposable(
             }
         )
     }
+}
+
+
+private val THINK_TOOL_BLOCK_REGEX =
+    Regex(
+        "<(think|thinking|tool|tool_result|status)(?:\\s[^>]*)?>[\\s\\S]*?</\\1>|<status\\s[^>]*/>",
+        RegexOption.IGNORE_CASE
+    )
+
+private fun splitThinkingAndTools(raw: String): Pair<String, String> {
+    if (raw.isBlank()) return raw to ""
+    if (!raw.contains("<think") && !raw.contains("<tool") && !raw.contains("<status")) return raw to ""
+    val body = StringBuilder()
+    val external = StringBuilder()
+    var cursor = 0
+    THINK_TOOL_BLOCK_REGEX.findAll(raw).forEach { match ->
+        body.append(raw, cursor, match.range.first)
+        external.append(match.value.trim()).append("\n")
+        cursor = match.range.last + 1
+    }
+    body.append(raw, cursor, raw.length)
+    val extText = external.toString().trim()
+    if (extText.isEmpty()) return raw to ""
+    return body.toString().trim() to extText
 }
