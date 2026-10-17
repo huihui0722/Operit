@@ -401,7 +401,7 @@ fun BubbleAiMessageComposable(
                                 )
                             } else {
                                 StreamMarkdownRenderer(
-                                    content = message.content,
+                                    content = bubbleBodyContent,
                                     textColor = textColor,
                                     backgroundColor = backgroundColor,
                                     onLinkClick = rememberedOnLinkClick,
@@ -470,6 +470,23 @@ fun BubbleAiMessageComposable(
                             renderContent()
                         }
                     }
+                }
+            }
+            if (externalBlockContent.isNotBlank()) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(top = 2.dp)
+                ) {
+                    StreamMarkdownRenderer(
+                        content = externalBlockContent,
+                        textColor = textColor,
+                        backgroundColor = Color.Transparent,
+                        onLinkClick = rememberedOnLinkClick,
+                        xmlRenderer = xmlRenderer,
+                        nodeGrouper = nodeGrouper,
+                        enableDialogs = enableDialogs,
+                        modifier = Modifier.fillMaxWidth(),
+                        state = externalRendererState,
+                    )
                 }
             }
         }
