@@ -473,8 +473,11 @@ fun BubbleAiMessageComposable(
                 }
             }
             if (externalBlockContent.isNotBlank()) {
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(top = 2.dp)
+                Surface(
+                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp, start = 4.dp, end = 4.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                    tonalElevation = 0.dp,
                 ) {
                     StreamMarkdownRenderer(
                         content = externalBlockContent,
@@ -699,8 +702,11 @@ fun BubbleAiMessageComposable(
                 }
             }
             if (externalBlockContent.isNotBlank()) {
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(top = 2.dp)
+                Surface(
+                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp, start = 4.dp, end = 4.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                    tonalElevation = 0.dp,
                 ) {
                     StreamMarkdownRenderer(
                         content = externalBlockContent,
