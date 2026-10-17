@@ -1,4 +1,4 @@
-name: Android Build
+﻿name: Android Build
 
 on:
   workflow_dispatch:
@@ -104,7 +104,22 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${ANDROID_HOME:-}" ] || [ ! -d "$ANDROID_HOME" ]; then
+            echo "ANDROID_HOME missing on runner" >&2
+            exit 1
+          fi
+          TOOLS_BIN="$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin 2>/dev/null | head -1 || true)"
+          if [ -z "$TOOLS_BIN" ]; then
+            echo "cmdline-tools not found under $ANDROID_HOME" >&2
+            exit 1
+          fi
+          echo "using sdkmanager: $TOOLS_BIN"
+          echo "$TOOLS_BIN" >> "$GITHUB_PATH"
+          yes | "$TOOLS_BIN/sdkmanager" --licenses >/dev/null 2>&1 || true
+          "$TOOLS_BIN/sdkmanager" --version || true
 
       - name: Install Android SDK, NDK and CMake
         shell: bash
